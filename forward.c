@@ -573,8 +573,10 @@ static void nested_surface_commit(struct wl_client *client,
 	}
 
 	/* Finally, commit updates to corresponding upstream background surface */
+	bool first_buffer = false;
 	if (surface->committed.attachment) {
 		// permit subsurface drawing
+		first_buffer = !surface->sway_surface->has_buffer;
 		surface->sway_surface->has_buffer = true;
 	}
 
@@ -597,6 +599,12 @@ static void nested_surface_commit(struct wl_client *client,
 	}
 
 	wl_surface_commit(background->surface);
+
+	if (first_buffer) {
+		/* draw the indicator now (--indicator-idle-visible), not only after a key press */
+		sw_surf->dirty = true;
+		render(sw_surf);
+	}
 }
 
 static void nested_surface_set_buffer_transform(struct wl_client *client,
